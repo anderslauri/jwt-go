@@ -6,10 +6,17 @@ import (
 	"time"
 )
 
-// For a type to be a Claims object, it must just have a Valid method that determines
-// if the token is invalid for any supported reason
+// Claims must support the following.
+//
+// - Valid determines if token is invalid for any supported reason.
 type Claims interface {
 	Valid() error
+}
+
+// LeewayClaim allows to set leeway when validating iat and/or nbf claim.
+type LeewayClaim interface {
+	Claims
+	Leeway(n time.Duration) LeewayClaim
 }
 
 // Structured version of Claims Section, as referenced at
@@ -17,18 +24,17 @@ type Claims interface {
 // See examples for how to use this with your own claim types
 type StandardClaims struct {
 	Audience  []string `json:"aud,omitempty"`
-	ExpiresAt int64  `json:"exp,omitempty"`
-	Id        string `json:"jti,omitempty"`
-	IssuedAt  int64  `json:"iat,omitempty"`
-	Issuer    string `json:"iss,omitempty"`
-	NotBefore int64  `json:"nbf,omitempty"`
-	Subject   string `json:"sub,omitempty"`
+	ExpiresAt int64    `json:"exp,omitempty"`
+	Id        string   `json:"jti,omitempty"`
+	IssuedAt  int64    `json:"iat,omitempty"`
+	Issuer    string   `json:"iss,omitempty"`
+	NotBefore int64    `json:"nbf,omitempty"`
+	Subject   string   `json:"sub,omitempty"`
+	leeway    int64    `json:"-"`
 }
 
-// Validates time based claims "exp, iat, nbf".
-// There is no accounting for clock skew.
-// As well, if any of the above claims are not in the token, it will still
-// be considered a valid claim.
+// Validates time based claims "exp, iat, nbf", as well, if any of the claims
+// are not in the token, it will still be considered a valid claim.
 func (c StandardClaims) Valid() error {
 	vErr := new(ValidationError)
 	now := TimeFunc().Unix()
@@ -58,6 +64,12 @@ func (c StandardClaims) Valid() error {
 	return vErr
 }
 
+// Leeway sets leeway when validating claims nbf and iat.
+func (c StandardClaims) Leeway(n time.Duration) Claims {
+	c.leeway = n.Milliseconds() / 1000
+	return c
+}
+
 // Compares the aud claim against cmp.
 // If required is false, this method will return true if the value matches or is unset
 func (c *StandardClaims) VerifyAudience(cmp string, req bool) bool {
@@ -73,7 +85,7 @@ func (c *StandardClaims) VerifyExpiresAt(cmp int64, req bool) bool {
 // Compares the iat claim against cmp.
 // If required is false, this method will return true if the value matches or is unset
 func (c *StandardClaims) VerifyIssuedAt(cmp int64, req bool) bool {
-	return verifyIat(c.IssuedAt, cmp, req)
+	return verifyIat(c.IssuedAt-c.leeway, cmp, req)
 }
 
 // Compares the iss claim against cmp.
@@ -85,7 +97,7 @@ func (c *StandardClaims) VerifyIssuer(cmp string, req bool) bool {
 // Compares the nbf claim against cmp.
 // If required is false, this method will return true if the value matches or is unset
 func (c *StandardClaims) VerifyNotBefore(cmp int64, req bool) bool {
-	return verifyNbf(c.NotBefore, cmp, req)
+	return verifyNbf(c.NotBefore-c.leeway, cmp, req)
 }
 
 // ----- helpers

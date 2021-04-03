@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 )
 
 type Parser struct {
-	ValidMethods         []string // If populated, only these methods will be considered valid
-	UseJSONNumber        bool     // Use JSON Number format in JSON decoder
-	SkipClaimsValidation bool     // Skip claims validation during token parsing
+	ValidMethods         []string      // If populated, only these methods will be considered valid
+	UseJSONNumber        bool          // Use JSON Number format in JSON decoder
+	SkipClaimsValidation bool          // Skip claims validation during token parsing
+	Leeway               time.Duration // Allowed leeway when validating iat, nbf claims.
 }
 
 // Parse, validate, and return a token.
@@ -55,13 +57,17 @@ func (p *Parser) ParseWithClaims(tokenString string, claims Claims, keyFunc Keyf
 		}
 		return token, &ValidationError{Inner: err, Errors: ValidationErrorUnverifiable}
 	}
-
 	vErr := &ValidationError{}
 
 	// Validate Claims
 	if !p.SkipClaimsValidation {
-		if err := token.Claims.Valid(); err != nil {
-
+		var err error
+		if t, ok := token.Claims.(LeewayClaim); ok {
+			err = t.Leeway(p.Leeway).Valid()
+		} else {
+			err = token.Claims.Valid()
+		}
+		if err != nil {
 			// If the Claims Valid returned an error, check if it is a validation error,
 			// If it was another error type, create a ValidationError with a generic ClaimsInvalid flag set
 			if e, ok := err.(*ValidationError); !ok {
