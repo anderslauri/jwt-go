@@ -15,8 +15,7 @@ type Claims interface {
 
 // LeewayClaim allows to set leeway when validating iat and/or nbf claim.
 type LeewayClaim interface {
-	Claims
-	Leeway(n time.Duration) LeewayClaim
+	Leeway(n time.Duration) Claims
 }
 
 // Structured version of Claims Section, as referenced at
