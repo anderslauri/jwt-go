@@ -58,12 +58,10 @@ func (p *Parser) ParseWithClaims(tokenString string, claims Claims, keyFunc Keyf
 		return token, &ValidationError{Inner: err, Errors: ValidationErrorUnverifiable}
 	}
 	vErr := &ValidationError{}
-
-	// Validate Claims
+	// Validate Claims.
 	if !p.SkipClaimsValidation {
-		var err error
-		if t, ok := token.Claims.(LeewayClaim); ok {
-			err = t.Leeway(p.Leeway).Valid()
+		if t, ok := token.Claims.(Leeway); ok {
+			err = t.Allow(p.Leeway).Valid()
 		} else {
 			err = token.Claims.Valid()
 		}

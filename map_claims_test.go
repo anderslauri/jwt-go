@@ -2,18 +2,18 @@ package jwt
 
 import "testing"
 
-func Test_mapClaims_list_aud(t *testing.T){
+func Test_mapClaims_list_aud(t *testing.T) {
 	mapClaims := MapClaims{}
-	mapClaims.set("aud", []string{"foo"})
+	mapClaims["aud"] = []string{"foo"}
 	want := true
 	got := mapClaims.VerifyAudience("foo", true)
 	if want != got {
 		t.Fatalf("Failed to verify claims, wanted: %v got %v", want, got)
 	}
 }
-func Test_mapClaims_string_aud(t *testing.T){
+func Test_mapClaims_string_aud(t *testing.T) {
 	mapClaims := MapClaims{}
-	mapClaims.set(	"aud", "foo")
+	mapClaims["aud"] = "foo"
 	want := true
 	got := mapClaims.VerifyAudience("foo", true)
 	if want != got {
@@ -21,27 +21,18 @@ func Test_mapClaims_string_aud(t *testing.T){
 	}
 }
 
-func Test_mapClaims_list_aud_no_match(t *testing.T){
+func Test_mapClaims_list_aud_no_match(t *testing.T) {
 	mapClaims := MapClaims{}
-	mapClaims.set("aud", []string{"bar"})
+	mapClaims["aud"] = []string{"bar"}
 	want := false
 	got := mapClaims.VerifyAudience("foo", true)
 	if want != got {
 		t.Fatalf("Failed to verify claims, wanted: %v got %v", want, got)
 	}
 }
-func Test_mapClaims_string_aud_fail(t *testing.T){
+func Test_mapClaims_string_aud_fail(t *testing.T) {
 	mapClaims := MapClaims{}
-	mapClaims.set("aud", "bar")
-	want := false
-	got := mapClaims.VerifyAudience("foo", true)
-	if want != got {
-		t.Fatalf("Failed to verify claims, wanted: %v got %v", want, got)
-	}
-}
-
-func Test_mapClaims_string_aud_no_claim(t *testing.T){
-	mapClaims := MapClaims{}
+	mapClaims["aud"] = "bar"
 	want := false
 	got := mapClaims.VerifyAudience("foo", true)
 	if want != got {
@@ -49,7 +40,16 @@ func Test_mapClaims_string_aud_no_claim(t *testing.T){
 	}
 }
 
-func Test_mapClaims_string_aud_no_claim_not_required(t *testing.T){
+func Test_mapClaims_string_aud_no_claim(t *testing.T) {
+	mapClaims := MapClaims{}
+	want := false
+	got := mapClaims.VerifyAudience("foo", true)
+	if want != got {
+		t.Fatalf("Failed to verify claims, wanted: %v got %v", want, got)
+	}
+}
+
+func Test_mapClaims_string_aud_no_claim_not_required(t *testing.T) {
 	mapClaims := MapClaims{}
 	want := false
 	got := mapClaims.VerifyAudience("foo", false)

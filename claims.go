@@ -13,9 +13,11 @@ type Claims interface {
 	Valid() error
 }
 
-// LeewayClaim allows to set leeway when validating iat and/or nbf claim.
-type LeewayClaim interface {
-	Leeway(n time.Duration) Claims
+// Leeway must support the following.
+//
+// - Allow set allowed leeway when validating iat and/or nbf claim.
+type Leeway interface {
+	Allow(n time.Duration) Claims
 }
 
 // Structured version of Claims Section, as referenced at
@@ -33,7 +35,8 @@ type StandardClaims struct {
 }
 
 // Validates time based claims "exp, iat, nbf", as well, if any of the claims
-// are not in the token, it will still be considered a valid claim.
+// are not in the token, it will still be considered a valid claim. Leeway can
+// be applied when optional through Leeway.Allow() through calling routine.
 func (c StandardClaims) Valid() error {
 	vErr := new(ValidationError)
 	now := TimeFunc().Unix()
@@ -63,8 +66,8 @@ func (c StandardClaims) Valid() error {
 	return vErr
 }
 
-// Leeway sets leeway when validating claims nbf and iat.
-func (c StandardClaims) Leeway(n time.Duration) Claims {
+// Allow sets allowed leeway when validating claims nbf and iat.
+func (c StandardClaims) Allow(n time.Duration) Claims {
 	c.leeway = n.Milliseconds() / 1000
 	return c
 }

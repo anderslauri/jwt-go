@@ -173,6 +173,38 @@ var jwtTestData = []struct {
 		&jwt.Parser{UseJSONNumber: true},
 	},
 	{
+		"Validate iat and nbf with sufficient leeway",
+		"", // autogen
+		defaultKeyFunc,
+		&jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Minute * 5).Unix(),
+			IssuedAt:  time.Now().Add(time.Minute * 4).Unix(),
+			NotBefore: time.Now().Add(time.Minute * 4).Unix(),
+		},
+		true,
+		0,
+		&jwt.Parser{
+			UseJSONNumber: true,
+			Leeway:        5 * time.Minute,
+		},
+	},
+	{
+		"Validate iat and nbf with insufficient leeway",
+		"", // autogen
+		defaultKeyFunc,
+		&jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Minute * 5).Unix(),
+			IssuedAt:  time.Now().Add(time.Minute * 4).Unix(),
+			NotBefore: time.Now().Add(time.Minute * 4).Unix(),
+		},
+		false,
+		0,
+		&jwt.Parser{
+			UseJSONNumber: true,
+			Leeway:        1 * time.Minute,
+		},
+	},
+	{
 		"SkipClaimsValidation during token parsing",
 		"", // autogen
 		defaultKeyFunc,
