@@ -31,7 +31,7 @@ type StandardClaims struct {
 	Issuer    string   `json:"iss,omitempty"`
 	NotBefore int64    `json:"nbf,omitempty"`
 	Subject   string   `json:"sub,omitempty"`
-	leeway    int64    `json:"-"`
+	leeway    int64
 }
 
 // Validates time based claims "exp, iat, nbf", as well, if any of the claims
