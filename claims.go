@@ -68,7 +68,7 @@ func (c StandardClaims) Valid() error {
 
 // Allow sets allowed leeway when validating claims nbf and iat.
 func (c StandardClaims) Allow(n time.Duration) Claims {
-	c.leeway = n.Milliseconds() / 1000
+	c.leeway = n.Microseconds() / 1000000
 	return c
 }
 
